@@ -8,36 +8,67 @@
 import SwiftUI
 
 struct ToDoListView: View {
-    var toDos = ["Learn Swift",
-    "Build Apps",
-    "Change the World",
-    "Bring the Awesome",
-    "Take a Vaccation"]
-    
+    @State private var sheetIsPresented = false
+    @EnvironmentObject var toDosVM: ToDosViewModel
+
     var body: some View {
         NavigationStack {
             VStack {
                 List {
-                    ForEach(toDos, id: \.self) { toDo in
-                        
+                    ForEach(toDosVM.toDos) { toDo in
                         NavigationLink {
-                            DetailView(passedValue: toDo)
+                            DetailView(toDo: toDo)
                         } label: {
-                            Text(toDo)
-                        }
+                            HStack {
+                                Image(systemName: toDo.isCompleted ? "checkmark.square" : "square")
+                                    .onTapGesture {
+                                        toDosVM.toggleCompleted(toDo: toDo)
+                                    }
+                                Text(toDo.item)
+                            }
+                         }
                         .buttonStyle(.borderedProminent)
                     }
+                    //When you swipe left, swiftUI will pass in the rows selected as an IndexSet
+                    .onDelete { indexSet in
+                        toDosVM.deleteToDo(indexSet: indexSet)
+                    }
+                    .onMove { fromOffsets, toOffset in
+                        toDosVM.moveToDo(fromOffsets: fromOffsets, toOffset: toOffset)
+                     }
                 }
                 .navigationTitle("To Do List")
                 .navigationBarTitleDisplayMode(.automatic)
                 .listStyle(.plain)
+                
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        EditButton()
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            sheetIsPresented.toggle()
+                            
+                        } label: {
+                            Image(systemName: "plus")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+                .sheet(isPresented: $sheetIsPresented) {
+                    NavigationStack {
+                        DetailView(toDo: ToDo())
+                    }
+                }
             }
         }
+        
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ToDoListView()
+            .environmentObject(ToDosViewModel())
     }
 }

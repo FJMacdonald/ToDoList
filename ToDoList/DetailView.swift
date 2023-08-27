@@ -8,24 +8,64 @@
 import SwiftUI
 
 struct DetailView: View {
-    var passedValue: String
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var toDosVM: ToDosViewModel
+    @State var toDo: ToDo
     
     var body: some View {
-        VStack {
-            Image(systemName: "swift")
-                .resizable()
-                .scaledToFit()
-                .foregroundColor(.orange)
-            Text("You are a swifty legend")
-                .font(.largeTitle)
-                .multilineTextAlignment(.center)
+        List {
+            TextField("Enter To Do here", text: $toDo.item)
+                .font(.title)
+                .textFieldStyle(.roundedBorder)
+                .padding(.vertical)
+                .listRowSeparator(.hidden)
+            
+            Toggle("Set Remiinder", isOn: $toDo.reminderIsOn)
+                .padding(.top)
+                .listRowSeparator(.hidden)
+            
+            DatePicker("Date", selection: $toDo.dueDate)
+                .listRowSeparator(.hidden)
+                .padding(.bottom)
+                .disabled(!toDo.reminderIsOn)
+            
+            Text("Notes:")
+                .padding(.top)
+            TextField("Notes", text: $toDo.notes, axis: .vertical)
+                .textFieldStyle(.roundedBorder)
+                .listRowSeparator(.hidden)
+            
+            
+            Toggle("Completed:", isOn: $toDo.isCompleted)
+                .padding(.top)
+                .listRowSeparator(.hidden)
+                .toggleStyle(.automatic)
+            
+            
+            
         }
-        .padding()
+        .listStyle(.plain)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    toDosVM.saveToDo(toDo: toDo)
+                    dismiss()
+                }
+            }
+        }
     }
 }
 
 struct DetailView_Previews: PreviewProvider {
     static var previews: some View {
-        DetailView(passedValue: "Hello World")
+        DetailView(toDo: ToDo())
+            .environmentObject(ToDosViewModel())
     }
 }
